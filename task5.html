@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Task-5: Weather App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #74ebd5, #acb6e5);
+      --container-bg: #ffffff;
+      --text-color: #2c3e50;
+      --header-color: #2980b9;
+      --input-border: #e0e0e0;
+      --input-focus: #3498db;
+      --button-bg: #3498db;
+      --button-hover: #2c80b4;
+      --toggle-bg: #ecf0f1;
+      --toggle-text: #34495e;
+      --toggle-active-bg: #3498db;
+      --toggle-active-text: #fff;
+      --icon-color: #f39c12;
+      --shadow-color: rgba(0, 0, 0, 0.15);
+    }
+
+    body.night {
+      --bg-gradient: linear-gradient(135deg, #2c3e50, #4b6584);
+      --container-bg: #34495e;
+      --text-color: #ecf0f1;
+      --header-color: #74b9ff;
+      --input-border: #7f8c8d;
+      --input-focus: #74b9ff;
+      --button-bg: #74b9ff;
+      --button-hover: #5dade2;
+      --toggle-bg: #7f8c8d;
+      --toggle-text: #ecf0f1;
+      --toggle-active-bg: #74b9ff;
+      --toggle-active-text: #2c3e50;
+      --icon-color: #f1c40f;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg-gradient);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      color: var(--text-color);
+      transition: all 0.5s ease;
+    }
+
+    .weather-container {
+      background: var(--container-bg);
+      padding: 40px 30px;
+      max-width: 500px;
+      width: 90%;
+      border-radius: 20px;
+      box-shadow: 0 12px 30px var(--shadow-color);
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    h1 {
+      font-size: 2.3em;
+      margin-bottom: 10px;
+      color: var(--header-color);
+    }
+
+    .input-container {
+      margin: 25px 0;
+    }
+
+    input {
+      padding: 12px 16px;
+      width: 60%;
+      max-width: 250px;
+      font-size: 16px;
+      border: 2px solid var(--input-border);
+      border-radius: 8px;
+      outline: none;
+      transition: 0.3s ease;
+      background: var(--container-bg);
+      color: var(--text-color);
+    }
+
+    input:focus {
+      border-color: var(--input-focus);
+    }
+
+    button {
+      padding: 12px 18px;
+      font-size: 15px;
+      border: none;
+      border-radius: 8px;
+      margin: 10px 5px 0 5px;
+      cursor: pointer;
+      background: var(--button-bg);
+      color: white;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--button-hover);
+      transform: scale(1.03);
+    }
+
+    .result-box {
+      margin-top: 25px;
+      font-size: 16px;
+    }
+
+    .weather-icon {
+      font-size: 3.5em;
+      margin-bottom: 10px;
+      color: var(--icon-color);
+    }
+
+    .temp-toggle {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .temp-toggle button {
+      background: var(--toggle-bg);
+      color: var(--toggle-text);
+      padding: 8px 20px;
+      margin: 0 10px;
+      border-radius: 50px;
+      transition: 0.3s ease;
+    }
+
+    .temp-toggle button.active {
+      background: var(--toggle-active-bg);
+      color: var(--toggle-active-text);
+    }
+
+    @media screen and (max-width: 480px) {
+      h1 {
+        font-size: 1.8em;
+      }
+
+      input {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+
+      .input-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .temp-toggle {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="weather-container">
+    <h1>🌦️ Weather App</h1>
+
+    <div class="input-container">
+      <input type="text" id="cityInput" placeholder="Enter city name (e.g., Delhi, London)" />
+      <button onclick="getWeather()">Get Weather</button>
+      <button onclick="getGeoWeather()">Use My Location</button>
+    </div>
+
+    <div id="weatherResult" class="result-box"></div>
+
+    <div class="temp-toggle">
+      <button id="celsiusBtn" onclick="toggleTemp('C')" class="active">°C</button>
+      <button id="fahrenheitBtn" onclick="toggleTemp('F')">°F</button>
+    </div>
+  </div>
+
+  <script>
+    let currentTempUnit = 'C';
+
+    // Set day/night theme based on local time
+    function setTheme() {
+      const now = new Date();
+      const hours = now.getHours();
+      const isDay = hours >= 6 && hours < 18;
+      document.body.classList.toggle('night', !isDay);
+    }
+
+    // Call setTheme on page load
+    setTheme();
+
+    function toggleTemp(unit) {
+      currentTempUnit = unit;
+      const city = document.getElementById('cityInput').value.trim();
+      if (city) {
+        getWeather();
+      } else {
+        const weather = document.getElementById('weatherResult');
+        if (weather) {
+          const temp = weather.querySelector('.temp-value');
+          if (temp) {
+            const currentTemp = parseFloat(temp.dataset[unit]);
+            temp.innerText = `${currentTemp}°${unit}`;
+          }
+        }
+      }
+      document.getElementById('celsiusBtn').classList.toggle('active', unit === 'C');
+      document.getElementById('fahrenheitBtn').classList.toggle('active', unit === 'F');
+    }
+
+    async function getWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      if (!city) {
+        alert('Please enter a city name.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://wttr.in/${city}?format=j1`);
+        const data = await response.json();
+
+        const current = data.current_condition[0];
+        const longitude = parseFloat(data.nearest_area[0].longitude);
+        let temperature = current.temp_C;
+        if (currentTempUnit === 'F') {
+          temperature = (temperature * 9/5) + 32;
+        }
+
+        const isDay = isLocationDay(longitude);
+        const weatherIcon = getWeatherIcon(current.weatherDesc[0].value, isDay);
+        const weatherHTML = `
+          <div class="weather-icon">${weatherIcon}</div>
+          <h2>📍 ${city}</h2>
+          <p><strong>Condition:</strong> ${current.weatherDesc[0].value}</p>
+          <p><strong>Temperature:</strong> <span class="temp-value" data-C="${current.temp_C}" data-F="${(current.temp_C * 9/5) + 32}">${temperature}°${currentTempUnit}</span></p>
+          <p><strong>Humidity:</strong> ${current.humidity}%</p>
+          <p><strong>Wind Speed:</strong> ${current.windspeedKmph} km/h</p>
+        `;
+        document.getElementById('weatherResult').innerHTML = weatherHTML;
+      } catch (error) {
+        console.error(error);
+        alert('Could not fetch weather. Please try again later.');
+      }
+    }
+
+    async function getGeoWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+
+          try {
+            const response = await fetch(`https://wttr.in/${latitude},${longitude}?format=j1`);
+            const data = await response.json();
+            const city = data.nearest_area[0].areaName[0].value; // Use areaName for specific city
+            const current = data.current_condition[0];
+
+            let temperature = current.temp_C;
+            if (currentTempUnit === 'F') {
+              temperature = (temperature * 9/5) + 32;
+            }
+
+            const isDay = isLocationDay(longitude);
+            const weatherIcon = getWeatherIcon(current.weatherDesc[0].value, isDay);
+            const weatherHTML = `
+              <div class="weather-icon">${weatherIcon}</div>
+              <h2>📍 ${city}</h2>
+              <p><strong>Condition:</strong> ${current.weatherDesc[0].value}</p>
+              <p><strong>Temperature:</strong> <span class="temp-value" data-C="${current.temp_C}" data-F="${(current.temp_C * 9/5) + 32}">${temperature}°${currentTempUnit}</span></p>
+              <p><strong>Humidity:</strong> ${current.humidity}%</p>
+              <p><strong>Wind Speed:</strong> ${current.windspeedKmph} km/h</p>
+            `;
+            document.getElementById('weatherResult').innerHTML = weatherHTML;
+          } catch (error) {
+            console.error(error);
+            alert('Could not fetch weather. Please try again later.');
+          }
+        }, () => {
+          alert('Geolocation is not available or permission denied.');
+        });
+      } else {
+        alert('Geolocation is not supported by this browser.');
+      }
+    }
+
+    function isLocationDay(longitude) {
+      // Approximate local time using longitude (15° = 1 hour)
+      const utcOffsetHours = longitude / 15;
+      const now = new Date();
+      const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const localTime = new Date(utcTime + (utcOffsetHours * 3600000));
+      const hours = localTime.getHours();
+      return hours >= 6 && hours < 18;
+    }
+
+    function getWeatherIcon(condition, isDay) {
+      const icons = {
+        'Clear': isDay ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>',
+        'Partly cloudy': isDay ? '<i class="fas fa-cloud-sun"></i>' : '<i class="fas fa-cloud-moon"></i>',
+        'Cloudy': '<i class="fas fa-cloud"></i>',
+        'Overcast': '<i class="fas fa-cloud-showers-heavy"></i>',
+        'Rain': '<i class="fas fa-cloud-rain"></i>',
+        'Thunderstorm': '<i class="fas fa-bolt"></i>',
+        'Snow': '<i class="fas fa-snowflake"></i>',
+        'Mist': '<i class="fas fa-smog"></i>',
+        'Fog': '<i class="fas fa-smog"></i>',
+      };
+
+      return icons[condition] || (isDay ? '<i class="fas fa-cloud-sun"></i>' : '<i class="fas fa-cloud-moon"></i>');
+    }
+  </script>
+</body>
+</html>
